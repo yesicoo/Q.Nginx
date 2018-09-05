@@ -13,5 +13,6 @@ namespace Q.Nginx
         internal static string LogsDir;
         internal static string MainConfPath;
         internal static string ConfDir;
+        internal static string DefaultPort;
     }
 }

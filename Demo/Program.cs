@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Q.Nginx;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,9 +11,16 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            Q.Nginx.NginxHelper.Init(@"D:\Tools\nginx\nginx.exe");
+            NginxHelper.Init(@"D:\Tools\nginx\nginx.exe");
+
+            NginxHelper.Start();
+
+
+            NginxHelper.CheckStatus();
 
             Console.ReadLine();
+
+            NginxHelper.Stop();
         }
     }
 }
