@@ -37,7 +37,7 @@ namespace Q.Nginx
                 throw new Exception("not find nginx!");
             }
 
-            var nginx_conf = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TempleConf", "nginx.conf"));
+            var nginx_conf = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TemplateConf", "nginx.conf"));
             nginx_conf = nginx_conf.Replace("↱Logs↲", Utils.LogsDir).Replace("↱BasePath↲", Utils.BaseDirectory).Replace("↱vHost↲", Utils.vHostDir).Replace("↱Conf↲", Utils.ConfDir);
 
 
@@ -49,8 +49,9 @@ namespace Q.Nginx
 
             using (var wr = File.CreateText(Path.Combine(Utils.ConfDir, "mime.types")))
             {
-                wr.Write(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TempleConf", "mime.types")));
+                wr.Write(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TemplateConf", "mime.types")));
             }
+
 
 
 
@@ -63,9 +64,9 @@ namespace Q.Nginx
                 {
                     wr.Write("start /D \"" + dirpath + "\" nginx -c "+ Path.Combine(Utils.ConfDir, "nginx.conf"));
                 }
-                using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "stop.bat")))
+                using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "quit.bat")))
                 {
-                    wr.Write("start /D \"" + dirpath + "\" nginx -s stop");
+                    wr.Write("start /D \"" + dirpath + "\" nginx -s quit");
                 }
                 using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "reload.bat")))
                 {

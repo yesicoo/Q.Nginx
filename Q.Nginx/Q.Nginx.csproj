@@ -5,10 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="TempleConf\mime.types">
+    <None Update="TemplateConf\mime.types">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TempleConf\nginx.conf">
+    <None Update="TemplateConf\nginx.conf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
