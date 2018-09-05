@@ -108,7 +108,12 @@ namespace Q.Nginx
             Console.WriteLine("服务正在重新载入配置");
         }
 
-        public static void CheckStatus()
+
+        public static void ServerList()
+        {
+           var files = Directory.GetFiles(Utils.vHostDir, "*.conf");
+        }
+        public static NginxStatus CheckStatus()
         {
             using (WebClient wc = new WebClient())
             {
@@ -117,11 +122,28 @@ namespace Q.Nginx
                 {
                     status_Str = wc.DownloadString("http://127.0.0.1:" + Utils.DefaultPort + "/ngx_status");
 
+                    NginxStatus ns = new NginxStatus();
+                    var ss= status_Str.Split('\n');
+                    ns.ActiveConnections = long.Parse(ss[0].Replace("Active connections:", "").Trim());
+                    var ss_2 = ss[2].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    ns.SumConnections = long.Parse(ss_2[0]);
+                    ns.FinishedConnections = long.Parse(ss_2[1]);
+                    ns.Requests = long.Parse(ss_2[2]);
+                    var ss_3 = ss[3].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    ns.Reading = long.Parse(ss_3[1]);
+                    ns.Writing = long.Parse(ss_3[3]);
+                    ns.Waiting = long.Parse(ss_3[5]);
+                    //Active connections: 1
+                    //server accepts handled requests
+                    // 1 1 1
+                    //Reading: 0 Writing: 1 Waiting: 0
 
+                    return ns;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
+                    return null;
                 }
             }
         }
