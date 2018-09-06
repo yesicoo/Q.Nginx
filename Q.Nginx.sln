@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Q.Nginx", "Q.Nginx\Q.Nginx.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{6122A59B-F1C4-4D0C-8B5F-FE7C50913E3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetCoreDemo", "DotNetCoreDemo\DotNetCoreDemo.csproj", "{FF386CFB-8DB3-4904-8BA6-5F7425714254}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard", "Dashboard\Dashboard.csproj", "{86CFED13-F679-4BAC-A570-EBBF322FFF45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{6122A59B-F1C4-4D0C-8B5F-FE7C50913E3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6122A59B-F1C4-4D0C-8B5F-FE7C50913E3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6122A59B-F1C4-4D0C-8B5F-FE7C50913E3E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FF386CFB-8DB3-4904-8BA6-5F7425714254}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FF386CFB-8DB3-4904-8BA6-5F7425714254}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FF386CFB-8DB3-4904-8BA6-5F7425714254}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FF386CFB-8DB3-4904-8BA6-5F7425714254}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86CFED13-F679-4BAC-A570-EBBF322FFF45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86CFED13-F679-4BAC-A570-EBBF322FFF45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86CFED13-F679-4BAC-A570-EBBF322FFF45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86CFED13-F679-4BAC-A570-EBBF322FFF45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

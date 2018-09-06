@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Linq;
 
 namespace Q.Nginx
 {
@@ -172,12 +173,12 @@ namespace Q.Nginx
         }
         #endregion
 
-        #region 添加站点配置
+        #region 添加编辑站点配置
         /// <summary>
         /// 添加站点配置
         /// </summary>
         /// <param name="sc"></param>
-        public static void AddSite(SiteConfig sc)
+        public static void AddEditSite(SiteConfig sc)
         {
             scs.RemoveAll(x => x.SiteName == sc.SiteName);
             scs.Add(sc);
@@ -193,38 +194,34 @@ namespace Q.Nginx
         }
         #endregion
 
+        #region 获取站点信息
+        /// <summary>
+        /// 获取门店信息
+        /// </summary>
+        /// <param name="sitename"></param>
+        /// <returns></returns>
+
+        public static SiteConfig GetSite(string sitename)
+        {
+            return scs.FirstOrDefault(x => x.SiteName == sitename);
+        } 
+        #endregion
+
         #region 状态检查
 
         /// <summary>
         /// 状态检查
         /// </summary>
         /// <returns></returns>
-        public static NginxStatus CheckStatus()
+        public static string CheckStatusStr()
         {
+            string status_Str = string.Empty;
+
             using (WebClient wc = new WebClient())
             {
-                string status_Str = string.Empty;
                 try
                 {
                     status_Str = wc.DownloadString("http://127.0.0.1:" + Utils.DefaultPort + "/ngx_status");
-
-                    NginxStatus ns = new NginxStatus();
-                    var ss = status_Str.Split('\n');
-                    ns.ActiveConnections = long.Parse(ss[0].Replace("Active connections:", "").Trim());
-                    var ss_2 = ss[2].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    ns.SumConnections = long.Parse(ss_2[0]);
-                    ns.FinishedConnections = long.Parse(ss_2[1]);
-                    ns.Requests = long.Parse(ss_2[2]);
-                    var ss_3 = ss[3].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    ns.Reading = long.Parse(ss_3[1]);
-                    ns.Writing = long.Parse(ss_3[3]);
-                    ns.Waiting = long.Parse(ss_3[5]);
-                    //Active connections: 1
-                    //server accepts handled requests
-                    // 1 1 1
-                    //Reading: 0 Writing: 1 Waiting: 0
-
-                    return ns;
                 }
                 catch (Exception ex)
                 {
@@ -232,6 +229,39 @@ namespace Q.Nginx
                     return null;
                 }
             }
+            return status_Str;
+        }
+        public static NginxStatus CheckStatus()
+        {
+
+            try
+            {
+                var status_Str = CheckStatusStr();
+
+                NginxStatus ns = new NginxStatus();
+                var ss = status_Str.Split('\n');
+                ns.ActiveConnections = long.Parse(ss[0].Replace("Active connections:", "").Trim());
+                var ss_2 = ss[2].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                ns.SumConnections = long.Parse(ss_2[0]);
+                ns.FinishedConnections = long.Parse(ss_2[1]);
+                ns.Requests = long.Parse(ss_2[2]);
+                var ss_3 = ss[3].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                ns.Reading = long.Parse(ss_3[1]);
+                ns.Writing = long.Parse(ss_3[3]);
+                ns.Waiting = long.Parse(ss_3[5]);
+                //Active connections: 1
+                //server accepts handled requests
+                // 1 1 1
+                //Reading: 0 Writing: 1 Waiting: 0
+
+                return ns;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+
         }
 
         #endregion
