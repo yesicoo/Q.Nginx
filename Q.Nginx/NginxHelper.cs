@@ -1,5 +1,7 @@
 ﻿using Q.Lib;
+using Q.Nginx.Entity;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -8,6 +10,9 @@ namespace Q.Nginx
 {
     public class NginxHelper
     {
+
+        static List<SiteConfig> scs = null;
+        static string SiteConfPath = Path.Combine(Utils.BaseDirectory, "Sites.jb");
         /// <summary>
         /// 初始化
         /// </summary>
@@ -38,13 +43,19 @@ namespace Q.Nginx
                 Directory.CreateDirectory(Utils.ConfDir);
             }
 
+            Utils.HtmlDir = Path.Combine(Utils.BaseDirectory, "html");
+            if (!Directory.Exists(Utils.HtmlDir))
+            {
+                Directory.CreateDirectory(Utils.HtmlDir);
+            }
+
             Utils.NginxPath = nginx_path;
             if (!File.Exists(Utils.NginxPath))
             {
                 throw new Exception("not find nginx!");
             }
 
-            var nginx_conf = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TemplateConf", "nginx.conf"));
+            var nginx_conf = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Template", "nginx.conf"));
             nginx_conf = nginx_conf.Replace("↱Logs↲", Utils.LogsDir).Replace("↱BasePath↲", Utils.BaseDirectory).Replace("↱vHost↲", Utils.vHostDir).Replace("↱Conf↲", Utils.ConfDir).Replace("↱DefPort↲", DefaultPort);
 
 
@@ -56,10 +67,18 @@ namespace Q.Nginx
 
             using (var wr = File.CreateText(Path.Combine(Utils.ConfDir, "mime.types")))
             {
-                wr.Write(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TemplateConf", "mime.types")));
+                wr.Write(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Template", "mime.types")));
             }
 
 
+            foreach (var item in Directory.GetFiles(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Template", "html")))
+            {
+                FileInfo file = new FileInfo(item);
+                using (var wr = File.CreateText(Path.Combine(Utils.HtmlDir, file.Name)))
+                {
+                    wr.Write(File.ReadAllText(item));
+                }
+            }
 
 
 #if NETSTANDARD2_0
@@ -86,6 +105,11 @@ namespace Q.Nginx
 
             }
 #endif
+
+
+
+           
+
             Console.WriteLine("初始化完成");
         }
 
@@ -94,25 +118,40 @@ namespace Q.Nginx
         {
             RunShell.Start(Path.Combine(Utils.BaseDirectory, "start.bat")).Run();
             Console.WriteLine("服务已启动");
+
+            SiteConfig sc = new SiteConfig();
+            sc.HostNames = new System.Collections.Generic.List<string>() { "xuqing.me", "niubi.me" };
+            sc.Port = "80";
+            sc.RootPath = "D://niubi/haha";
+            sc.SiteName = "测试站点";
+            sc.Maintaining = "维护中";
+            string str = sc.GetStringStr();
+
+
+
         }
 
         public static void Stop()
         {
-            RunShell.Start(Path.Combine(Utils.BaseDirectory,"stop.bat")).Run();
+            RunShell.Start(Path.Combine(Utils.BaseDirectory, "stop.bat")).Run();
             Console.WriteLine("服务正在停止");
         }
 
         public static void Reload()
         {
-            RunShell.Start(Path.Combine(Utils.BaseDirectory,"reload.bat")).Run();
+            RunShell.Start(Path.Combine(Utils.BaseDirectory, "reload.bat")).Run();
             Console.WriteLine("服务正在重新载入配置");
         }
 
 
-        public static void ServerList()
+
+
+        public static void AddSite(SiteConfig sc)
         {
-           var files = Directory.GetFiles(Utils.vHostDir, "*.conf");
+
         }
+
+
         public static NginxStatus CheckStatus()
         {
             using (WebClient wc = new WebClient())
@@ -123,7 +162,7 @@ namespace Q.Nginx
                     status_Str = wc.DownloadString("http://127.0.0.1:" + Utils.DefaultPort + "/ngx_status");
 
                     NginxStatus ns = new NginxStatus();
-                    var ss= status_Str.Split('\n');
+                    var ss = status_Str.Split('\n');
                     ns.ActiveConnections = long.Parse(ss[0].Replace("Active connections:", "").Trim());
                     var ss_2 = ss[2].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     ns.SumConnections = long.Parse(ss_2[0]);
@@ -145,6 +184,31 @@ namespace Q.Nginx
                     Console.WriteLine(ex.Message);
                     return null;
                 }
+            }
+        }
+
+
+
+
+
+
+        private  static void ReadSiteConfig()
+        {
+            if (File.Exists(SiteConfPath))
+            {
+                scs = JsonHelper.JsonDeserialize<List<SiteConfig>>(File.ReadAllText(SiteConfPath));
+                if (scs == null)
+                {
+                    scs = new List<SiteConfig>();
+                }
+            }
+        }
+
+        private static void WriteSiteConfig()
+        {
+            using (var wr = File.CreateText(SiteConfPath))
+            {
+                wr.Write(JsonHelper.JsonSerializer(scs));
             }
         }
     }
