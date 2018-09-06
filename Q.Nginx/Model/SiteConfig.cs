@@ -10,10 +10,12 @@ namespace Q.Nginx.Entity
         /// 站点名称
         /// </summary>
         public string SiteName { set; get; }
+
+        public string description { set; get; }
         /// <summary>
         /// 绑定端口
         /// </summary>
-        public string Port { set; get; }
+        public string Port { set; get; } = Utils.DefaultPort;
         /// <summary>
         /// 绑定域名
         /// </summary>
@@ -55,7 +57,10 @@ namespace Q.Nginx.Entity
             sb.AppendLine("{");
             sb.Append("\t").Append("#基本配置-Start").AppendLine();
             sb.Append("\t").Append("listen ").Append(Port).Append(";").AppendLine();
-            sb.Append("\t").Append("server_name ").Append(string.Join(" ", HostNames)).Append(";").AppendLine();
+            if (HostNames != null && HostNames.Count > 0)
+            {
+                sb.Append("\t").Append("server_name ").Append(string.Join(" ", HostNames)).Append(";").AppendLine();
+            }
             sb.Append("\t").Append("index ").Append(string.Join(" ", IndexPages)).Append(";").AppendLine();
             sb.Append("\t").Append("root ").Append(RootPath).Append(";").AppendLine();
             sb.Append("\t").Append("#基本配置-End").AppendLine().AppendLine();
@@ -70,7 +75,7 @@ namespace Q.Nginx.Entity
             {
 
                 sb.Append("\t").Append("#禁止访问的文件或目录-Start").AppendLine();
-                sb.Append("\t").Append(@"location ~ ^/ (\.user.ini |\.htaccess |\.git |\.svn |\.project | LICENSE | README.md) ").AppendLine();
+                sb.Append("\t").Append(@"location ~ ^/(\.user.ini|\.htaccess|\.git|\.svn|\.project|LICENSE|README.md) ").AppendLine();
                 sb.Append("\t").Append("{").AppendLine();
                 sb.Append("\t").Append("\t").Append("return 404;").AppendLine();
                 sb.Append("\t").Append("}").AppendLine();
@@ -105,6 +110,7 @@ namespace Q.Nginx.Entity
                     sb.Append("\t").Append(@"location / ").AppendLine();
                     sb.Append("\t").Append("{").AppendLine();
                     sb.Append("\t").Append("\t").Append("proxy_pass  ").Append(Proxy_Pass).Append(";").AppendLine();
+                    sb.Append("\t").Append("\t").Append("proxy_redirect off").Append(";").AppendLine();
                     sb.Append("\t").Append("\t").Append("proxy_set_header Host ").Append(Proxy_Host).Append(";").AppendLine();
                     sb.Append("\t").Append("\t").Append("proxy_set_header X-Real-IP $remote_addr").Append(";").AppendLine();
                     sb.Append("\t").Append("\t").Append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for").Append(";").AppendLine();
@@ -153,8 +159,8 @@ namespace Q.Nginx.Entity
                 sb.Append("\t").Append("#维护状态-End").AppendLine().AppendLine();
             }
             sb.Append("\t").Append("#请求日志-Start").AppendLine();
-            sb.Append("\t").Append("access_log ").Append(Path.Combine(Utils.LogsDir, SiteName + ".log")).AppendLine();
-            sb.Append("\t").Append("error_log ").Append(Path.Combine(Utils.LogsDir, SiteName + ".error.log")).AppendLine();
+            sb.Append("\t").Append("access_log ").Append(Path.Combine(Utils.LogsDir, SiteName + ".log;")).AppendLine();
+            sb.Append("\t").Append("error_log ").Append(Path.Combine(Utils.LogsDir, SiteName + ".error.log;")).AppendLine();
             sb.Append("\t").Append("#请求日志-End").AppendLine().AppendLine();
             sb.AppendLine("}");
 

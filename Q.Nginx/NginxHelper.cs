@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Q.Nginx
 {
@@ -13,6 +14,8 @@ namespace Q.Nginx
 
         static List<SiteConfig> scs = null;
         static string SiteConfPath = Path.Combine(Utils.BaseDirectory, "Sites.jb");
+
+        #region 初始化
         /// <summary>
         /// 初始化
         /// </summary>
@@ -55,15 +58,6 @@ namespace Q.Nginx
                 throw new Exception("not find nginx!");
             }
 
-            var nginx_conf = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Template", "nginx.conf"));
-            nginx_conf = nginx_conf.Replace("↱Logs↲", Utils.LogsDir).Replace("↱BasePath↲", Utils.BaseDirectory).Replace("↱vHost↲", Utils.vHostDir).Replace("↱Conf↲", Utils.ConfDir).Replace("↱DefPort↲", DefaultPort);
-
-
-
-            using (var wr = File.CreateText(Path.Combine(Utils.ConfDir, "nginx.conf")))
-            {
-                wr.Write(nginx_conf);
-            }
 
             using (var wr = File.CreateText(Path.Combine(Utils.ConfDir, "mime.types")))
             {
@@ -79,25 +73,26 @@ namespace Q.Nginx
                     wr.Write(File.ReadAllText(item));
                 }
             }
-
+            ReadSiteConfig();
+            CreateMainConf();
 
 #if NETSTANDARD2_0
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
 #endif
-            string dirpath = new FileInfo(Utils.NginxPath).DirectoryName;
-            using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "start.bat")))
-            {
-                wr.Write("start /D \"" + dirpath + "\" nginx -c " + Path.Combine(Utils.ConfDir, "nginx.conf"));
-            }
-            using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "stop.bat")))
-            {
-                wr.Write("start /D \"" + dirpath + "\" nginx -s stop");
-            }
-            using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "reload.bat")))
-            {
-                wr.Write("start /D \"" + dirpath + "\" nginx -s reload");
-            }
+                string dirpath = new FileInfo(Utils.NginxPath).DirectoryName;
+                using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "start.bat")))
+                {
+                    wr.Write("start /D \"" + dirpath + "\" nginx -c " + Path.Combine(Utils.ConfDir, "nginx.conf"));
+                }
+                using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "stop.bat")))
+                {
+                    wr.Write("start /D \"" + dirpath + "\" nginx -s stop");
+                }
+                using (var wr = File.CreateText(Path.Combine(Utils.BaseDirectory, "reload.bat")))
+                {
+                    wr.Write("start /D \"" + dirpath + "\" nginx -s reload");
+                }
 #if NETSTANDARD2_0
             }
             else
@@ -105,53 +100,105 @@ namespace Q.Nginx
 
             }
 #endif
-
-
-
-           
-
             Console.WriteLine("初始化完成");
         }
+        #endregion
 
-
+        #region 启动
+        /// <summary>
+        /// 启动
+        /// </summary>
         public static void Start()
         {
+#if NETSTANDARD2_0
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                RunShell.Start(Path.Combine(Utils.BaseDirectory, "start.bat")).Run();
+            }
+            else
+            {
+                RunShell.Start(Utils.NginxPath).AddArguments("-c").AddArguments(Path.Combine(Utils.ConfDir, "nginx.conf")).Run();
+            }
+#else
             RunShell.Start(Path.Combine(Utils.BaseDirectory, "start.bat")).Run();
+#endif
+
             Console.WriteLine("服务已启动");
 
-            SiteConfig sc = new SiteConfig();
-            sc.HostNames = new System.Collections.Generic.List<string>() { "xuqing.me", "niubi.me" };
-            sc.Port = "80";
-            sc.RootPath = "D://niubi/haha";
-            sc.SiteName = "测试站点";
-            sc.Maintaining = "维护中";
-            string str = sc.GetStringStr();
-
-
-
         }
+        #endregion
 
+        #region 停止
+        /// <summary>
+        /// 停止
+        /// </summary>
         public static void Stop()
         {
+#if NETSTANDARD2_0
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                RunShell.Start(Path.Combine(Utils.BaseDirectory, "stop.bat")).Run();
+            }
+            else
+            {
+                RunShell.Start(Utils.NginxPath).AddArguments("-s").AddArguments("stop").Run();
+            }
+#else
             RunShell.Start(Path.Combine(Utils.BaseDirectory, "stop.bat")).Run();
+#endif
             Console.WriteLine("服务正在停止");
         }
+        #endregion
 
+        #region 重新载入
+        /// <summary>
+        /// 重新载入
+        /// </summary>
         public static void Reload()
         {
+#if NETSTANDARD2_0
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                RunShell.Start(Path.Combine(Utils.BaseDirectory, "reload.bat")).Run();
+            }
+            else
+            {
+                RunShell.Start(Utils.NginxPath).AddArguments("-s").AddArguments("reload").Run();
+            }
+#else
             RunShell.Start(Path.Combine(Utils.BaseDirectory, "reload.bat")).Run();
+#endif
             Console.WriteLine("服务正在重新载入配置");
         }
+        #endregion
 
-
-
-
+        #region 添加站点配置
+        /// <summary>
+        /// 添加站点配置
+        /// </summary>
+        /// <param name="sc"></param>
         public static void AddSite(SiteConfig sc)
         {
-
+            scs.RemoveAll(x => x.SiteName == sc.SiteName);
+            scs.Add(sc);
+            sc.Config_Path = Path.Combine(Utils.vHostDir, sc.SiteName.Replace(" ", "_") + ".conf");
+            var configStr = sc.GetStringStr();
+            using (var wr = File.CreateText(sc.Config_Path))
+            {
+                wr.Write(configStr);
+            }
+            WriteSiteConfig();
+            CreateMainConf();
+            Reload();
         }
+        #endregion
 
+        #region 状态检查
 
+        /// <summary>
+        /// 状态检查
+        /// </summary>
+        /// <returns></returns>
         public static NginxStatus CheckStatus()
         {
             using (WebClient wc = new WebClient())
@@ -187,22 +234,26 @@ namespace Q.Nginx
             }
         }
 
+        #endregion
 
-
-
-
-
-        private  static void ReadSiteConfig()
+        #region 读取站点配置
+        /// <summary>
+        /// 读取配置
+        /// </summary>
+        private static void ReadSiteConfig()
         {
             if (File.Exists(SiteConfPath))
             {
                 scs = JsonHelper.JsonDeserialize<List<SiteConfig>>(File.ReadAllText(SiteConfPath));
-                if (scs == null)
-                {
-                    scs = new List<SiteConfig>();
-                }
+            }
+            if (scs == null)
+            {
+                scs = new List<SiteConfig>();
             }
         }
+        #endregion
+
+        #region 保存站点配置
 
         private static void WriteSiteConfig()
         {
@@ -211,5 +262,33 @@ namespace Q.Nginx
                 wr.Write(JsonHelper.JsonSerializer(scs));
             }
         }
+        #endregion
+
+        #region 生成主配置文件
+        /// <summary>
+        /// 生成主配置文件
+        /// </summary>
+        private static void CreateMainConf()
+        {
+            var nginx_conf = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Template", "nginx.conf"));
+            nginx_conf = nginx_conf.Replace("↱Logs↲", Utils.LogsDir).Replace("↱BasePath↲", Utils.BaseDirectory).Replace("↱Conf↲", Utils.ConfDir).Replace("↱DefPort↲", Utils.DefaultPort);
+            StringBuilder sb = new StringBuilder();
+
+            if (scs != null)
+            {
+                foreach (var item in scs)
+                {
+                    sb.Append("\t").Append("include ").Append(item.Config_Path).Append(";").AppendLine();
+                }
+            }
+            nginx_conf = nginx_conf.Replace("↱vHost↲", sb.ToString());
+
+            using (var wr = File.CreateText(Path.Combine(Utils.ConfDir, "nginx.conf")))
+            {
+                wr.Write(nginx_conf);
+            }
+
+        }
+        #endregion
     }
 }
