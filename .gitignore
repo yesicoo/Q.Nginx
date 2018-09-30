@@ -5,3 +5,6 @@
 /.vs
 /DotNetCoreDemo/obj
 /DotNetCoreDemo/bin
+/Q.Nginx.Web/wwwroot/lib
+/Q.Nginx.Web/obj
+/Q.Nginx.Web/bin
