@@ -13,4 +13,8 @@
     <ProjectReference Include="..\Q.Nginx\Q.Nginx.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
 </Project>
